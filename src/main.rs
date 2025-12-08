@@ -5,7 +5,7 @@ mod repository;
 mod router;
 
 use axum::serve;
-use libs::{config::AppConfig, connect::AppConnect, logger, prometheus, prometheus::PromOpts};
+use libs::{config::AppConfig, connect::AppConnect, log, prometheus, prometheus::PromOpts};
 use router::AppState;
 use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
@@ -13,7 +13,7 @@ use tokio::net::TcpListener;
 #[tokio::main]
 async fn main() {
   let config = AppConfig::init();
-  let _ = logger::init(config.path).expect("Failed to initialize log");
+  let _ = log::init(config.path);
 
   let db_master = AppConnect::create_db_pool(&config.db_master).await;
   let db_slave = AppConnect::create_db_pool(&config.db_slave).await;
@@ -27,7 +27,7 @@ async fn main() {
     cache,
     prom_opts,
   });
-  println!("→ The current environment is {}", config.env);
+  println!("→ Starting application in the {} environment", config.env);
 
   // Metrics record uptime
   prometheus::start_record_uptime();
@@ -37,7 +37,7 @@ async fn main() {
   let addr: SocketAddr = format!("0.0.0.0:{}", config.port).parse().expect("Invalid server address");
   let listener = TcpListener::bind(addr).await.expect("Failed to bind server");
 
-  println!("→ The TCP Server running on http://{}", addr);
+  println!("→ Application started successfully. Listening on http://{}", addr);
 
-  serve(listener, app).await.expect("Server crashed");
+  serve(listener, app).await.expect("Service crashed");
 }

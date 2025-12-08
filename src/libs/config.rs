@@ -82,7 +82,7 @@ impl AppConfig {
     Self {
       env: Self::get_mode().to_string(),
       port: env::var("KS_PORT").unwrap_or_else(|_| "8887".into()),
-      path: env::var("LOG_PATH").unwrap_or_else(|_| "/data/logs/rust-practice".into()),
+      path: env::var("LOG_DIR").unwrap_or_else(|_| "/data/logs/rust-practice".into()),
       db_master: Self::create_mysql_uri(db.username.to_string(), db.password.to_string(), db.master.to_string(), db.database.to_string()),
       db_slave: Self::create_mysql_uri(db.username.to_string(), db.password.to_string(), db.slave.to_string(), db.database.to_string()),
       cache: Self::create_redis_uri(cache),

@@ -166,7 +166,7 @@ pub fn start_record_uptime() {
         if let Err(e) = std::panic::catch_unwind(|| {
           UPTIME.inc();
         }) {
-          log::error!("record_uptime panicked: {:?}", e);
+          println!("record_uptime panicked: {:?}", e);
         }
       }
     });
