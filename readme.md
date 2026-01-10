@@ -1,42 +1,49 @@
 # rust-practice
 
-## 项目构架
+A practice project built with Rust, following clean architecture principles and common enterprise-level project structure.
 
-基于[axum](https://docs.rs/axum)、[sqlx](https://docs.rs/sqlx)、[redis](https://docs.rs/redis)构建，依赖[rust](https://www.rust-lang.org)环境。
+## Tech Stack
 
-## 项目地址
+- Web framework: [axum](https://github.com/tokio-rs/axum)
+- Database: Supports [MySQL](https://github.com/launchbadge/sqlx)
+- Cache: Supports [Redis](https://github.com/redis-rs/redis-rs)
+- Runtime: Requires [Rust](https://rust-lang.org/) environment
 
-https://github.com/meizikeai/rust-practice.git
+## Project Structure
 
-## 项目结构
-
-| Path        | Description   | Notes   |
-| ----------- | ------------- | ------- |
-| src         | project       | --      |
-| Cargo.toml  | package       | --      |
-
-## 开发环境
-
-  + 克隆项目 - `$ git clone https://github.com/meizikeai/rust-practice.git`
-  + 启动项目 - `$ cd rust-practicet && cargo run`
-
-## 项目说明
-
-配置可见 src/utils/config.rs 文件。
-
-```sh
-# 测试示例
-$ curl http://0.0.0.0:8887/get/888666/something
-{"code":200,"data":{"fuck":1},"message":"OK"}
-
-$ curl --location 'http://0.0.0.0:8887/del/888666/something' \
---header 'Content-Type: application/json' \
---data '{
-    "fuck": 1,
-}'
-{"code":200,"data":{},"message":"OK"}
+```bash
+rust-practice
+|-- src
+|   |-- handler             → HTTP handler
+|   |-- repository          → Data access layer
+|   |-- utils               → Utility packages (common reusable functions)
+|   |-- config.rs           → Configuration
+|   |-- main.rs             → Application entry point
+|   |-- router.rs           → Routing definition
+|-- Cargo.mod               → Rust module and dependency management
+|-- README.md               → Project documentation
 ```
 
-## 其它信息
+## Quick Start
 
-Web Frameworks：https://www.arewewebyet.org/topics/frameworks
+```bash
+# Clone the repository
+git clone https://github.com/meizikeai/rust-practice.git
+cd rust-practice
+
+# Run the application
+cargo run
+```
+
+## Recommended Development Environment
+
+- Editor: [Visual Studio Code](https://code.visualstudio.com)
+- Rust extension and tools: Refer to the official [Rust in Visual Studio Code](https://code.visualstudio.com/docs/languages/rust)
+
+Please make sure all Go tools are properly installed before starting development.
+
+## Helpful Resources
+
+- [The Rust Programming Language](https://rust-lang.org)
+- [Rust Documentation](https://docs.rs)
+- [Web Frameworks](https://www.arewewebyet.org/topics/frameworks)

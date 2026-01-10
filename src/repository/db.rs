@@ -1,5 +1,5 @@
-// src/repository/database.rs
-use crate::router::AppState;
+// src/repository/db.rs
+use crate::model::domain::AppState;
 use chrono::Utc;
 use serde_json::Map;
 use serde_json::Value;
@@ -9,14 +9,17 @@ pub struct Database {}
 
 impl Database {
   pub async fn get_test(state: &AppState, uid: u64) -> Result<Value, Error> {
-    let mut pool = state.db_slave.acquire().await?;
-    let row = sqlx::query("SELECT content FROM settings WHERE uid = ? LIMIT 1").bind(uid).fetch_one(&mut *pool).await?;
+    let mut pool = state.db.relation.slave.acquire().await?;
+    let row = sqlx::query("SELECT content FROM settings WHERE uid = ? LIMIT 1")
+      .bind(uid)
+      .fetch_one(&mut *pool)
+      .await?;
 
     Ok(row.get("content"))
   }
 
   pub async fn add_test(state: &AppState, uid: u64, fields: Value) -> Result<u64, Error> {
-    let mut pool = state.db_master.acquire().await?;
+    let mut pool = state.db.relation.master.acquire().await?;
 
     let mut change = vec![];
     let mut temporary: Map<String, Value> = Map::new();
@@ -43,7 +46,13 @@ impl Database {
     );
     println!("{},{},{},{}", sql, uid, content, now);
 
-    let result = sqlx::query(&sql).bind(uid as i64).bind(content).bind(now).bind(now).execute(&mut *pool).await?;
+    let result = sqlx::query(&sql)
+      .bind(uid as i64)
+      .bind(content)
+      .bind(now)
+      .bind(now)
+      .execute(&mut *pool)
+      .await?;
 
     Ok(result.rows_affected())
   }

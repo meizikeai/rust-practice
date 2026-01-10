@@ -1,40 +1,44 @@
 // src/main.rs
-mod controller;
-mod libs;
+mod config;
+mod handler;
+mod model;
 mod repository;
 mod router;
+mod utils;
 
 use axum::serve;
-use libs::{config::AppConfig, connect::AppConnect, log, prometheus, prometheus::PromOpts};
-use router::AppState;
+use config::Config;
+use model::domain::AppState;
 use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
+use utils::{connect::Connect, log, prometheus, prometheus::PromOpts};
 
 #[tokio::main]
 async fn main() {
-  let config = AppConfig::init();
-  let _ = log::init(config.path);
+  let cfg = Config::init();
+  let cfg_clone = cfg.clone();
 
-  let db_master = AppConnect::create_db_pool(&config.db_master).await;
-  let db_slave = AppConnect::create_db_pool(&config.db_slave).await;
-  let cache = AppConnect::create_redis_pool(&config.cache).await;
-  let prom_opts: Arc<PromOpts> = prometheus::init_prometheus_opts();
-
+  // Log
+  let _ = log::init(cfg.log_path);
+  // Prometheus
+  let prom: Arc<PromOpts> = prometheus::init_prometheus_opts();
+  // Connect to database
+  let (db, cache) = Connect::new(cfg_clone).await;
+  // Create state
   let state = Arc::new(AppState {
-    env: config.env.clone(),
-    db_master,
-    db_slave,
     cache,
-    prom_opts,
+    db,
+    env: cfg.env.clone(),
+    prom,
   });
-  println!("→ Starting application in the {} environment", config.env);
+  println!("→ Starting application in the {} environment", cfg.env);
 
   // Metrics record uptime
   prometheus::start_record_uptime();
 
   // The main thread starts the HTTP service
   let app = router::init(state).await;
-  let addr: SocketAddr = format!("0.0.0.0:{}", config.port).parse().expect("Invalid server address");
+  let addr: SocketAddr = format!("0.0.0.0:{}", cfg.port).parse().expect("Invalid server address");
   let listener = TcpListener::bind(addr).await.expect("Failed to bind server");
 
   println!("→ Application started successfully. Listening on http://{}", addr);

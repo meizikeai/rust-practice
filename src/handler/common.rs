@@ -1,7 +1,8 @@
-// src/controller/default.rs
+// src/handler/common.rs
 use crate::{
-  repository::{mysql::Database, redis::Cache},
-  router::AppState,
+  model::domain::AppState,
+  repository::{cache::Cache, db::Database},
+  utils::response::{Code, failure, success},
 };
 use axum::{
   Json,
@@ -11,18 +12,6 @@ use axum::{
 };
 use serde_json::{Value, json};
 use std::sync::Arc;
-
-fn api_response<T: serde::Serialize>(code: u32, data: T) -> (StatusCode, Json<Value>) {
-  let status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-  (
-    status,
-    Json(json!({
-      "code": code,
-      "message": status.canonical_reason().unwrap_or("Unknown"),
-      "data": data
-    })),
-  )
-}
 
 pub async fn ok() -> String {
   "OK".to_string()
@@ -34,12 +23,11 @@ pub async fn not_found() -> impl IntoResponse {
 
 // test
 pub async fn get_something(State(state): State<Arc<AppState>>, Path(uid): Path<u64>) -> (StatusCode, Json<Value>) {
-  let mut data = json!({});
-
   if uid == 0 {
-    return api_response(422, data);
+    return failure(Code::UnprocessableEntity);
   }
 
+  let mut data = json!({});
   if state.env == "test" {
     data = Database::get_test(&state, uid).await.unwrap_or(json!({}))
   } else {
@@ -47,17 +35,17 @@ pub async fn get_something(State(state): State<Arc<AppState>>, Path(uid): Path<u
   };
   // println!("LocalCache -> {}", data);
 
-  api_response(200, data)
+  success(data)
 }
 
 pub async fn del_something(State(state): State<Arc<AppState>>, Path(uid): Path<u64>, Json(payload): Json<Value>) -> impl IntoResponse {
   if uid <= 0 {
-    return api_response(422, json!({}));
+    return failure(Code::UnprocessableEntity);
   }
 
   if let Value::Object(obj) = &payload {
     if obj.is_empty() {
-      return api_response(422, json!({}));
+      return failure(Code::UnprocessableEntity);
     }
   }
 
@@ -67,5 +55,5 @@ pub async fn del_something(State(state): State<Arc<AppState>>, Path(uid): Path<u
     let _ = Cache::add_test(&state, uid, payload).await;
   }
 
-  api_response(200, json!({}))
+  success(json!({}))
 }

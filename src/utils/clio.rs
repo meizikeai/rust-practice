@@ -1,18 +1,6 @@
-// src/libs/clio.rs
-use std::io;
+// src/utils/clio.rs
 use std::path::PathBuf;
 use std::process::{Command, Output};
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum ClioError {
-  #[error("Command execution failed: {0}")]
-  IoError(#[from] io::Error),
-  #[error("Non-zero exit status (code={0}): {1}")]
-  CommandFailed(i32, String),
-  #[error("Invalid UTF-8 output")]
-  InvalidUtf8,
-}
 
 pub struct ClioTool {
   command: String,              // such as "get_conf", "get_host", "get_allhost", "get_batch_keys"
@@ -35,26 +23,29 @@ impl ClioTool {
     self
   }
 
-  pub fn execute(&self) -> Result<Output, ClioError> {
+  pub fn execute(&self) -> Result<Output, Box<dyn std::error::Error>> {
     let output = Command::new(self.binary_path.as_deref().unwrap_or("clio-tool".as_ref()))
       .arg(&self.command)
       .arg(&self.path)
-      .output()?;
+      .output()
+      .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
 
     if !output.status.success() {
-      let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
-      return Err(ClioError::CommandFailed(output.status.code().unwrap_or(-1), stderr));
+      let code = output.status.code().unwrap_or(-1);
+      let stderr = String::from_utf8_lossy(&output.stderr);
+
+      return Err(Box::new(std::io::Error::new(
+        std::io::ErrorKind::Other,
+        format!("clio-tool failed (exit {code}): {stderr}"),
+      )));
     }
 
-    // println!("{:?}", output);
     Ok(output)
   }
 
-  pub fn get_output(&self) -> Result<String, ClioError> {
+  pub fn get_output(&self) -> Result<String, Box<dyn std::error::Error>> {
     let output = self.execute()?;
-    // String::from_utf8(output.stderr).map_err(|_| ClioError::InvalidUtf8)
-    let stdout = String::from_utf8(output.stdout).map_err(|_| ClioError::InvalidUtf8)?.trim_end().to_string();
-
+    let stdout = String::from_utf8(output.stdout)?.trim_end().to_string();
     Ok(stdout)
   }
 
@@ -79,7 +70,7 @@ impl ClioTool {
   }
 
   #[allow(dead_code)]
-  pub fn mget_conf(paths: &[&str]) -> Result<Vec<String>, ClioError> {
+  pub fn mget_conf(paths: &[&str]) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     paths.iter().map(|path| ClioTool::get_conf(*path).get_output()).collect::<Result<Vec<_>, _>>()
   }
 }

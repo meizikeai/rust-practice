@@ -1,2 +1,2 @@
-pub mod mysql;
-pub mod redis;
+pub mod cache;
+pub mod db;
