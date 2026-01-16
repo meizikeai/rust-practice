@@ -15,6 +15,7 @@ A practice project built with Rust, following clean architecture principles and 
 rust-practice
 |-- src
 |   |-- handler             → HTTP handler
+|   |-- model               → Domain model
 |   |-- repository          → Data access layer
 |   |-- utils               → Utility packages (common reusable functions)
 |   |-- config.rs           → Configuration

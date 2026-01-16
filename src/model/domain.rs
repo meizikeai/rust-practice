@@ -1,30 +1,36 @@
 // src/model/domain.rs
-use crate::utils::prometheus::PromOpts;
+use crate::{
+    repository::Repository,
+    utils::{fetch::Fetch, prometheus::PromOpts},
+};
 use deadpool_redis::Pool as RedisPool;
 use sqlx::{MySql, Pool as MysqlPool};
 use std::sync::Arc;
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub struct AppState {
-  pub cache: StateCache,
-  pub db: StateDB,
-  pub env: String,
-  pub prom: Arc<PromOpts>,
-}
-
-#[derive(Clone)]
-pub struct StateDB {
-  pub relation: StateDbPool,
+    pub env: String,
+    pub fetch: Fetch,
+    pub prometheus: Arc<PromOpts>,
+    pub repository: Repository,
 }
 
 #[allow(dead_code)]
-#[derive(Clone)]
-pub struct StateDbPool {
-  pub master: MysqlPool<MySql>,
-  pub slave: MysqlPool<MySql>,
+#[derive(Clone, Debug)]
+pub struct DbClient {
+    pub relation: DbManager,
 }
 
-#[derive(Clone)]
-pub struct StateCache {
-  pub profile: RedisPool,
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+pub struct DbManager {
+    pub master: MysqlPool<MySql>,
+    pub slave: MysqlPool<MySql>,
+}
+
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+pub struct CacheClient {
+    pub profile: RedisPool,
 }
