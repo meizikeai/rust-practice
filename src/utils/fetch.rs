@@ -61,6 +61,12 @@ impl Fetch {
             rb = rb.json(b);
         }
 
+        // if let Some(temp_builder) = rb.try_clone() {
+        //     if let Ok(full_req) = temp_builder.build() {
+        //         println!("URL: {}", full_req.url());
+        //     }
+        // }
+
         let resp = rb.send().await.map_err(|e| {
             tracing::error!("Request Transport Error: {}", e);
             AppError::Logic(Code::InternalServerError)
@@ -80,14 +86,19 @@ impl Fetch {
 
         if res.code != 200 {
             tracing::error!("External API Business Error: code={}, msg={}", res.code, res.message);
-            return Err(AppError::Logic(Code::InternalServerError));
+            let code = Code::from_u32(res.code);
+            return Err(AppError::Logic(code));
         }
 
         Ok(res.data.unwrap_or_default())
     }
 
-    pub async fn get<T: DeserializeOwned + Default>(&self, uri: &str) -> Result<T, AppError> {
-        self.request::<T, ()>(Method::GET, uri, None, None, None).await
+    pub async fn get<T: DeserializeOwned + Default>(
+        &self,
+        uri: &str,
+        params: Option<&HashMap<String, String>>,
+    ) -> Result<T, AppError> {
+        self.request::<T, ()>(Method::GET, uri, None, params, None).await
     }
 
     pub async fn post<T: DeserializeOwned + Default, B: Serialize>(&self, url: &str, body: &B) -> Result<T, AppError> {

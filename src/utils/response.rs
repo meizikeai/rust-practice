@@ -58,6 +58,23 @@ impl Code {
             Code::DbError => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
+
+    pub fn from_u32(code: u32) -> Self {
+        match code {
+            200 => Code::Ok,
+            400 => Code::BadRequest,
+            401 => Code::Unauthorized,
+            403 => Code::Forbidden,
+            404 => Code::NotFound,
+            405 => Code::MethodNotAllowed,
+            422 => Code::UnprocessableEntity,
+            500 => Code::InternalServerError,
+
+            403001 => Code::DbError,
+
+            _ => Code::InternalServerError,
+        }
+    }
 }
 
 #[derive(Serialize)]
