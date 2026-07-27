@@ -44,6 +44,7 @@ impl Code {
         }
     }
 
+    #[allow(dead_code)]
     pub fn http_status(&self) -> StatusCode {
         match self {
             Code::Ok => StatusCode::OK,

@@ -16,6 +16,7 @@ use regex::Regex;
 use std::{sync::Arc, time::Instant};
 use tokio::time::{Duration, interval};
 
+#[allow(dead_code)]
 const NAMESPACE: &str = "service";
 
 lazy_static! {
